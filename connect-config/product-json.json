@@ -1,0 +1,14 @@
+{
+  "name": "datagen-product",
+  "config": {
+    "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
+    "kafka.topic": "streams.product-json2",
+    "quickstart": "product",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+    "max.interval": 5000,
+    "iterations": 10000,
+    "tasks.max": "1"
+  }
+}

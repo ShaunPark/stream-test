@@ -1,0 +1,15 @@
+{
+  "name": "datagen-order",
+  "config": {
+    "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
+    "kafka.topic": "streams.order",
+    "quickstart": "order",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.schema.registry.url": "http://schema-registry:8081",
+    "value.converter.schemas.enable": "true",
+    "max.interval": 5000,
+    "iterations": 10000,
+    "tasks.max": "1"
+  }
+}

@@ -3,3 +3,9 @@
 
 # Ignore Gradle build output directory
 build
+*.class
+app/bin/main/com/example/kstream/App.class
+app/bin/test/com/example/kstream/AppTest.class
+app/src/main/java/com/example/kstream/JsonToAvro copy.java
+app/src/main/java/com/example/kstream/OrderAggOneMin copy.java
+app/src/main/java/com/example/kstream/BranchAndPeek copy.java
