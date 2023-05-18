@@ -30,9 +30,7 @@ import org.json.simple.parser.ParseException;
 
 import com.example.kstream.util.SerdesFactory;
 import com.example.kstream.util.StreamUtil;
-import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
 import ksql.orders;
-import ksql.product;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +48,7 @@ public class OrderAggOneMin {
     
             Runtime.getRuntime().addShutdownHook(new Thread(stream::close));    
         } catch (IOException e) {
+            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
@@ -60,7 +59,20 @@ public class OrderAggOneMin {
 
         final StreamsBuilder builder = new StreamsBuilder();
 
-        // add code here
+        final KStream<String, orders> ordersStream = builder.stream(sourceTopic, Consumed.with(Serdes.String(), SerdesFactory.<orders>getSerdes()));
+        KGroupedStream<String, orders> groupedStream = ordersStream.groupBy(
+                (k,v) -> v.getItemid(), Grouped.with( Serdes.String(), SerdesFactory.<orders>getSerdes())
+        );
+        groupedStream.windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofSeconds(30)))
+        .aggregate( () -> 0L, 
+                    (aggKey, newValue, aggValue) -> (aggValue + (long)newValue.getOrderunits()), 
+                    Named.as("item-quantity-agg"), 
+                    Materialized.<String, Long, WindowStore<Bytes, byte[]>>as("item-quantity").withValueSerde(Serdes.Long()))
+        .toStream()
+        .filter((k,v) -> v > 25 )
+        .foreach((k, v) -> {
+            System.out.println( k.key() + ":" + k.window().startTime().atZone(ZoneId.of("GMT+9")).toString() + " --- " + v);
+        });
         
         return new KafkaStreams(builder.build(), config);
 

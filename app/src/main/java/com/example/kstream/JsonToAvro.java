@@ -15,7 +15,6 @@ import org.json.simple.parser.ParseException;
 
 import com.example.kstream.util.SerdesFactory;
 import com.example.kstream.util.StreamUtil;
-import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
 import ksql.product;
 
 import org.slf4j.Logger;
@@ -37,15 +36,33 @@ public class JsonToAvro {
             e.printStackTrace();
         }
 
+
     }
 
     static KafkaStreams buildJsonToAvroStream(final Properties config, final String sourceTopic,final String sinkTopic ) {
         SerdesFactory.setSerdesConfig(config);
 
         final StreamsBuilder builder = new StreamsBuilder();
+        JSONParser parser = new JSONParser();
 
-        // add code here
-        
+        // read the source stream
+        final KStream<String, String> jsonToAvroStream = builder.stream(sourceTopic, Consumed.with(Serdes.String(), Serdes.String()));
+        jsonToAvroStream.mapValues( v -> {
+            product product = new product();
+            try {
+                JSONObject jsonObject = (JSONObject) parser.parse(v);
+                product.setDescription((String)jsonObject.get("description"));
+                product.setId((Long)jsonObject.get("id"));
+                product.setName((String)jsonObject.get("name"));
+                product.setPrice((Double)jsonObject.get("price"));
+            } catch (ParseException e) {
+                throw new RuntimeException(e);
+            }
+
+            return product;
+
+        }).filter((k, v) -> v != null).to(sinkTopic,Produced.with(Serdes.String(), SerdesFactory.<product>getSerdes()));
+
         return new KafkaStreams(builder.build(), config);
     }
 }
